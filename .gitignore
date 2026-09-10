@@ -1,0 +1,62 @@
+# ---- Python virtual environment (rebuild from requirements.txt) ----
+.venv/
+venv/
+env/
+
+# ---- Python bytecode / caches ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# ---- Large data & outputs (sync these outside git) ----
+Saves/
+Polyscope screenshots/
+
+# ---- Common heavy file types, wherever they appear ----
+*.ply
+*.las
+*.laz
+*.pcd
+*.npy
+*.npz
+*.h5
+*.hdf5
+*.ckpt
+*.pt
+*.pth
+*.pkl
+*.zip
+*.7z
+*.tar.gz
+
+# ---- Editor / OS junk ----
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Runtime-generated UI state ----
+imgui.ini
+.polyscope.ini
+
+# ---- Project folders live outside the repo; these only appear if the app is
+#      accidentally run with the repo root as the project folder ----
+/project.json
+/plots/
+/features/
+/model/
+
+# ---- Office temp files ----
+~$*
+
+# ---- Logs & secrets ----
+*.log
+.env
+
+# ---- Data ----
+Data/CYENS/ 
+# ---- Local working notes (not published) ----
+plans/

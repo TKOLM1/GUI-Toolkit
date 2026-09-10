@@ -1,0 +1,5 @@
+# Development / test dependencies. Installs the runtime set too.
+-r requirements.txt
+
+pytest
+pytest-xdist      # parallel runner; pytest.ini defaults to -n auto

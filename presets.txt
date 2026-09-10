@@ -1,0 +1,392 @@
+# >>> BEGIN AUTO-GENERATED REFERENCE (edited automatically — do not hand-edit) >>>
+# This block is rebuilt from the code on every launch — it always reflects what is
+# actually available. Use the keys below in the list-valued settings of a preset.
+#
+# FEATURES  (use these keys in features_enabled / features_disabled):
+#   Class: Height
+#     Type: Central tendency
+#       h_mean               Mean height
+#       h_median             Median height
+#       h_max                Max height
+#       h_p25                Height p25
+#       h_p75                Height p75
+#       h_p95                Height p95
+#     Type: Spread
+#       h_var                Height variance
+#       h_std                Height std dev
+#       h_cv                 Coefficient of variation
+#     Type: Shape
+#       h_skew               Skewness
+#       h_kurtosis           Kurtosis
+#     Type: Structure
+#       entropy              Vertical entropy
+#       sigma_z              Roughness (sigma_z)
+#     Type: Density
+#       frac_above_mean      Fraction above mean
+#       ppr                  Pulse penetration ratio
+#   Class: Color
+#     Type: Colour
+#       R_mean               Mean red
+#       G_mean               Mean green
+#       B_mean               Mean blue
+#   Class: 2D
+#     Type: Horizontal (hand-crafted)
+#       pca_spread_major     Spread (major axis)
+#       pca_spread_minor     Spread (minor axis)
+#       pca_anisotropy       Anisotropy
+#       asym_major           Asymmetry (major axis)
+#       asym_minor           Asymmetry (minor axis)
+#       slope_angle_major    Top-bottom angle (major axis)
+#       slope_angle_minor    Top-bottom angle (minor axis)
+#       rough_major          Directional roughness (major axis)
+#       rough_minor          Directional roughness (minor axis)
+#
+# AUGMENTATION METHODS  (use these keys in augment_selected; ranges as
+#   augment_range.<method>.<param> = <min>, <max>):
+#   rotation_z     Rotation (vertical axis)  [Geometric]  params: angle_deg
+#       range.rotation_z.angle_deg default 0.0 .. 360.0  (Angle (deg))
+#   flip_h         Horizontal flip  [Geometric]  params: (no parameters)
+#   jitter_xy      x/y jitter  [Noise]  params: sigma_m
+#       range.jitter_xy.sigma_m default 0.0 .. 0.02  (Sigma (m))
+#   jitter_z       z jitter  [Noise]  params: sigma_m
+#       range.jitter_z.sigma_m default 0.0 .. 0.02  (Sigma (m))
+#   dropout        Point dropout  [Sampling]  params: fraction
+#       range.dropout.fraction default 0.0 .. 0.3  (Drop fraction)
+#   bootstrap      Bootstrap resample  [Sampling]  params: n_fraction
+#       range.bootstrap.n_fraction default 1.0 .. 1.0  (Size fraction)
+# <<< END AUTO-GENERATED REFERENCE <<<
+
+# ====================================================================
+# Pipeline configuration — presets of defaults for the first four tabs.
+#
+# A preset is a NAMED BLOCK:   [name] {  ...settings...  }
+# It pre-fills the Setup -> Clipping -> Augmentation -> Feature tabs.
+# Pick the active one on the Setup tab (or set `active` below).
+#
+# Paths are LITERAL: paste a raw Windows path with single backslashes,
+# e.g.  cloud_dir = C:\Data\clouds   (no doubling needed).
+# Blank value = "use the built-in default". `#` starts a comment line.
+# List values are comma-separated; see the reference block above for the
+# exact feature keys and augmentation methods/parameters you can use.
+# Copy the whole [default] { ... } block to make your own preset.
+# ====================================================================
+
+active = CYENS
+
+[default] {
+
+    # -- Where each "Browse..." dialog opens -------------------------
+    cloud_dir          =
+    mask_dir           =
+    import_clipped_dir =
+    reference_dir      =
+
+    # -- The actual inputs, pre-filled into the Import tab ------------
+    # A RELATIVE path is taken from the project root (the folder holding
+    # this file), so these keep working on any machine; an absolute path
+    # is used as-is. A path that does not exist is simply not filled in.
+    # Naming cloud_file/mask_file also selects the "point cloud + masks"
+    # route; naming import_folder selects the folder route.
+    cloud_file     =
+    mask_file      =
+    import_folder  =
+    reference_file =
+
+    # -- How a plot is IDENTIFIED in external data (imported filenames,
+    #    mask attributes, the reference sheet). The app always WRITES
+    #    files as plot(N); these only affect what it READS.
+    #    The plot number is whatever sits between these two strings:
+    label_start = plot(
+    label_end   = )
+    # Default mask attribute column to read the label from (blank = first):
+    label_field =
+
+    # Some datasets identify a plot by its POSITION IN THE FIELD, where
+    # neither number is unique on its own (e.g. 12-13-1-b.pcd = row 12,
+    # column 13). Turn that on here; label_start/label_end then describe
+    # the COLUMN, and these two describe the row.
+    use_row         = false
+    label_row_start =
+    label_row_end   = -
+
+    # -- Importing a folder of per-plot files ------------------------
+    # Everything downstream assumes METRES. Must be one of:
+    #   Already in metres | Millimetres -> metres |
+    #   Centimetres -> metres | Feet -> metres      (blank = metres)
+    source_units =
+    # Spread plots that all sit on the same origin so they stop
+    # overlapping. With use_row on, the real field layout is rebuilt and
+    # grid_columns is ignored.
+    grid_enabled = false
+    grid_columns = 10
+    grid_padding = 10.0
+
+    # -- Reference sheet (chosen on the Import tab) ------------------
+    # Which column holds the plot number, and (when use_row is on) the
+    # row. Blank key column = use the sheet's first column.
+    reference_key_column =
+    reference_row_column =
+    # Keep only the rows where <column> equals <value>. A sheet covering
+    # several scan dates lists every plot once per date, which makes the
+    # plot number ambiguous — narrow it to one date here.
+    reference_filter_column =
+    reference_filter_value  =
+
+    # -- Clipping ---------------------------------------------------
+    # Text inserted into every clipped file name, right after plot(N):
+    universal_string =
+
+    # -- Augmentation -----------------------------------------------
+    # Enabled method keys (comma-separated; blank = none pre-selected):
+    augment_selected    =
+    augment_min_methods = 1
+    augment_max_methods = 2
+    # Augmented copies per plot (the original is always kept as well):
+    augment_copies      = 5
+    # Per-method parameter ranges, one line each, e.g.:
+    #   augment_range.jitter_z.sigma_m = 0.0, 0.02
+
+    # -- Feature generation -----------------------------------------
+    # Point dimension holding height-above-ground. Blank = no forced
+    # default: the "Height channel" dropdown pre-selects the first
+    # channel detected in the plots. Set e.g. RelativeHeight to
+    # pre-select that channel when present.
+    height_channel =
+    # features_enabled is a whitelist (only these on). When it is blank,
+    # features_disabled is a blacklist (all on except these).
+    features_enabled  =
+    features_disabled =
+    # Imported reference columns: same enabled/disabled rule, plus which
+    # to one-hot ("split").
+    reference_features_enabled  =
+    reference_features_disabled =
+    reference_features_split    =
+
+    # -- Output file names (no extension; written as .csv) ----------
+    feature_table_name      = features
+    targets_table_name      = target
+    augmentation_table_name = Data augmentation
+}
+
+
+# ====================================================================
+# CYENS — one whole-field cloud per date, cut with a GeoPackage of plot
+# masks. Plots carry a single real id (the gpkg's `plot` column, 429...),
+# and the workbook is keyed on the same number, so no row/column pair and
+# no unit conversion are needed.
+# ====================================================================
+[CYENS] {
+
+    cloud_dir          = Data/CYENS
+    mask_dir           = Data/CYENS
+    import_clipped_dir =
+    reference_dir      = Data/CYENS
+
+    cloud_file     = Data/CYENS/03_04_2025/03-04-2025_pre_processed.las
+    mask_file      = Data/CYENS/final mask remapped.gpkg
+    import_folder  =
+    reference_file = Data/CYENS/Cyens data Sept2025.xlsx
+
+    # The gpkg stores a bare integer, so no surrounding text to strip.
+    label_start =
+    label_end   =
+    label_field = plot
+    use_row     = false
+
+    # Blank = detect. The .las declares UTM zone 36N, whose axis unit is the
+    # metre, so detection reads it straight off the file's own CRS. The clip
+    # route keeps real coordinates, so there is nothing to lay out either.
+    source_units =
+    grid_enabled = false
+
+    # Cyens data Sept2025.xlsx is keyed on F.PLT and covers one date, so
+    # no row column and no row filter.
+    reference_key_column    = F.PLT
+    reference_row_column    =
+    reference_filter_column =
+    reference_filter_value  =
+
+    universal_string =
+
+    augment_selected    = rotation_z, flip_h, jitter_xy, jitter_z, dropout
+    augment_min_methods = 1
+    augment_max_methods = 2
+    augment_copies      = 5
+
+    height_channel =
+    # Every feature on: this cloud carries RGB, so the colour features are
+    # real measurements here (both lists blank = the whole set enabled).
+    features_enabled  =
+    features_disabled =
+    reference_features_enabled  =
+    reference_features_disabled =
+    reference_features_split    =
+
+    feature_table_name      = features
+    targets_table_name      = target
+    augmentation_table_name = Data augmentation
+}
+
+
+# ====================================================================
+# SGCBP (Yanco 2019) — early scan, 2019-08-28 (stage Z31).
+#
+# Per-plot .pcd files, one folder per driving run. A plot is identified by
+# its grid position: 12-13-1-b.pcd is run 12, range 13. The range alone
+# repeats across every run (18 ranges, ~230 plots), so BOTH numbers are
+# needed — for uniqueness, to key the ground truth, and to rebuild the
+# field layout.
+#
+# The two scan dates share one ground-truth file and one set of
+# (runNo, rangeNo) keys, so each date has its own preset here: the only
+# differences are the folder and the stage filter. Mixing them would make
+# every plot number ambiguous.
+# ====================================================================
+[SGCBP 2019-08-28] {
+
+    cloud_dir          =
+    mask_dir           =
+    import_clipped_dir = Data/SGCBP/original/Yanco_TC_2019_HI-pcd
+    reference_dir      = Data/SGCBP/original
+
+    cloud_file     =
+    mask_file      =
+    import_folder  = Data/SGCBP/original/Yanco_TC_2019_HI-pcd/20190828
+    reference_file = Data/SGCBP/original/Ground_truth_data_final.csv
+
+    # 12-13-1-b.pcd -> row 12, column 13.
+    use_row         = true
+    label_row_start =
+    label_row_end   = -
+    label_start     = -
+    label_end       = -1-b
+    label_field     =
+
+    # Stated, not detected: .pcd files declare no coordinate system, and
+    # these coordinates are millimetres while the feature stack assumes
+    # metres. Every plot is stored re-centred on its own origin, so the
+    # layout is rebuilt from the run/range numbers.
+    source_units = Millimetres -> metres
+    grid_enabled = true
+    grid_columns = 18
+    grid_padding = 10.0
+
+    # Ground_truth_data_final.csv is keyed on (runNo, rangeNo) and holds
+    # both dates — every pair appears twice, so this filter is what keeps
+    # the join unambiguous.
+    reference_key_column    = rangeNo
+    reference_row_column    = runNo
+    reference_filter_column = stage
+    reference_filter_value  = Z31
+
+    universal_string =
+
+    augment_selected    = rotation_z, flip_h, jitter_xy, jitter_z, dropout
+    augment_min_methods = 1
+    augment_max_methods = 2
+    augment_copies      = 5
+
+    # The .pcd files carry no height-above-ground channel, so the plain Z
+    # is the height. Stated explicitly: left blank, the dropdown falls back
+    # to the file's first dimension, which is X.
+    height_channel = Z
+    # The .pcd files carry x/y/z + intensity only, so the three colour
+    # features are switched off — left on they would be all-NaN columns.
+    features_enabled  =
+    features_disabled = R_mean, G_mean, B_mean
+    # Nothing from the reference sheet is pre-ticked: which of its columns
+    # become features is the user's call, made on the Feature tab. Ticking
+    # any of them here would silently put sheet columns into X - and for
+    # biomass_g_mSq, the target itself, that is straight label leakage.
+    # (If you do tick trt, a categorical treatment code, also tick "split"
+    # so it is one-hot encoded rather than read as a number.)
+    reference_features_enabled  =
+    reference_features_disabled =
+    reference_features_split    =
+
+    feature_table_name      = features
+    targets_table_name      = target
+    augmentation_table_name = Data augmentation
+}
+
+
+# ====================================================================
+# SGCBP (Yanco 2019) — late scan, 2019-10-02 (stage Z65).
+#
+# Per-plot .pcd files, one folder per driving run. A plot is identified by
+# its grid position: 12-13-1-b.pcd is run 12, range 13. The range alone
+# repeats across every run (18 ranges, ~230 plots), so BOTH numbers are
+# needed — for uniqueness, to key the ground truth, and to rebuild the
+# field layout.
+#
+# The two scan dates share one ground-truth file and one set of
+# (runNo, rangeNo) keys, so each date has its own preset here: the only
+# differences are the folder and the stage filter. Mixing them would make
+# every plot number ambiguous.
+# ====================================================================
+[SGCBP 2019-10-02] {
+
+    cloud_dir          =
+    mask_dir           =
+    import_clipped_dir = Data/SGCBP/original/Yanco_TC_2019_HI-pcd
+    reference_dir      = Data/SGCBP/original
+
+    cloud_file     =
+    mask_file      =
+    import_folder  = Data/SGCBP/original/Yanco_TC_2019_HI-pcd/20191002
+    reference_file = Data/SGCBP/original/Ground_truth_data_final.csv
+
+    # 12-13-1-b.pcd -> row 12, column 13.
+    use_row         = true
+    label_row_start =
+    label_row_end   = -
+    label_start     = -
+    label_end       = -1-b
+    label_field     =
+
+    # Stated, not detected: .pcd files declare no coordinate system, and
+    # these coordinates are millimetres while the feature stack assumes
+    # metres. Every plot is stored re-centred on its own origin, so the
+    # layout is rebuilt from the run/range numbers.
+    source_units = Millimetres -> metres
+    grid_enabled = true
+    grid_columns = 18
+    grid_padding = 10.0
+
+    # Ground_truth_data_final.csv is keyed on (runNo, rangeNo) and holds
+    # both dates — every pair appears twice, so this filter is what keeps
+    # the join unambiguous.
+    reference_key_column    = rangeNo
+    reference_row_column    = runNo
+    reference_filter_column = stage
+    reference_filter_value  = Z65
+
+    universal_string =
+
+    augment_selected    = rotation_z, flip_h, jitter_xy, jitter_z, dropout
+    augment_min_methods = 1
+    augment_max_methods = 2
+    augment_copies      = 5
+
+    # The .pcd files carry no height-above-ground channel, so the plain Z
+    # is the height. Stated explicitly: left blank, the dropdown falls back
+    # to the file's first dimension, which is X.
+    height_channel = Z
+    # The .pcd files carry x/y/z + intensity only, so the three colour
+    # features are switched off — left on they would be all-NaN columns.
+    features_enabled  =
+    features_disabled = R_mean, G_mean, B_mean
+    # Nothing from the reference sheet is pre-ticked: which of its columns
+    # become features is the user's call, made on the Feature tab. Ticking
+    # any of them here would silently put sheet columns into X - and for
+    # biomass_g_mSq, the target itself, that is straight label leakage.
+    # (If you do tick trt, a categorical treatment code, also tick "split"
+    # so it is one-hot encoded rather than read as a number.)
+    reference_features_enabled  =
+    reference_features_disabled =
+    reference_features_split    =
+
+    feature_table_name      = features
+    targets_table_name      = target
+    augmentation_table_name = Data augmentation
+}

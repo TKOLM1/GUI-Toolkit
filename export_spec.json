@@ -1,0 +1,41 @@
+{
+  "width_cm": 5.0,
+  "height_cm": 3.5,
+  "dpi": 670,
+  "title_pt": 6.0,
+  "axis_pt": 4.0,
+  "tick_pt": 6.0,
+  "legend_pt": 4.0,
+  "legend_loc": "lower right",
+  "element_scale": 0.7,
+  "pad": 0.05,
+  "label_pt": 8.0,
+  "label_overrides": {
+    "held_out": {
+      "scale": 0.5
+    },
+    "training": {
+      "scale": 0.5
+    },
+    "combined": {
+      "scale": 0.35
+    },
+    "average": {
+      "scale": 0.75
+    }
+  },
+  "map_margin_frac": 0.06,
+  "map_offset_x": -0.5,
+  "map_offset_y": 0.0,
+  "map_rotation_deg": 102,
+  "map_zoom": 0.95,
+  "show_colorbar": false,
+  "colorbar_pos": "right",
+  "colorbar_width_frac": 0.16,
+  "colorbar_tick_pt": 9.0,
+  "colorbar_label_pt": 10.0,
+  "plot_label_scale": 1.0,
+  "show_title": true,
+  "title_overlay_pt": 6.0,
+  "background": "white"
+}

@@ -1,0 +1,26 @@
+# Runtime dependencies for the GP 2026 pipeline.
+#   python -m venv .venv && .venv/bin/pip install -r requirements.txt
+# Dev/test tooling lives in requirements-dev.txt.
+
+# ---- I/O ----
+laspy[lazrs]      # read/write .las + compressed .laz point clouds
+geopandas         # .gpkg plot-mask polygons (+ CRS) via pyogrio
+shapely           # vectorised point-in-polygon clipping (shapely.contains_xy)
+openpyxl          # pandas .xlsx engine for external reference tables
+
+# ---- Numerics ----
+numpy
+scipy
+pandas
+
+# ---- Modelling ----
+scikit-learn
+optuna            # hyper-parameter search
+joblib            # model persistence + parallel loops
+
+# ---- UI / plotting ----
+PySide6-Essentials  # desktop GUI (QtCore/QtGui/QtWidgets/QtSvg/QtPrintSupport).
+                    # NOT plain `PySide6`: that pulls PySide6-Addons (WebEngine, Qt3D,
+                    # Multimedia, Charts) which we never import — ~1.2 GB vs ~380 MB.
+matplotlib        # figures and result plots
+polyscope         # 3D viewer for the results-map click-through
