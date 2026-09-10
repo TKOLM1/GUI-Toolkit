@@ -1,5 +1,4 @@
-"""Entry point: launch the Wheat Biomass Toolkit (Augment -> Features -> ML).
-
+"""
 Run with the project interpreter:
 
     .venv\\Scripts\\python.exe main.py

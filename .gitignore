@@ -15,22 +15,6 @@ __pycache__/
 Saves/
 Polyscope screenshots/
 
-# ---- Common heavy file types, wherever they appear ----
-*.ply
-*.las
-*.laz
-*.pcd
-*.npy
-*.npz
-*.h5
-*.hdf5
-*.ckpt
-*.pt
-*.pth
-*.pkl
-*.zip
-*.7z
-*.tar.gz
 
 # ---- Editor / OS junk ----
 .vscode/
@@ -58,5 +42,6 @@ imgui.ini
 
 # ---- Data ----
 Data/CYENS/ 
+
 # ---- Local working notes (not published) ----
 plans/
