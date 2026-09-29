@@ -1286,8 +1286,15 @@ class MapView(QWidget):
         if file is None or not file.exists():
             return
         features = {"path": str(file)} if self.feature_check.isChecked() else None
+        # Honour the 3-D "Colour by"/colour-map settings, exactly as the combined 3-D push does;
+        # otherwise a single-plot open would silently show a different colouring from the one the
+        # controls describe.
+        coloring, cmap_name, solid = self._colouring_for([plot])
+        spec = {"path": str(file), "coloring": coloring, "cmap": cmap_name}
+        if solid is not None:
+            spec["color"] = solid[plot]
         self._viewer.send(
-            [{"path": str(file), "coloring": "rgb"}],
+            [spec],
             features=features,
             slope_strata_pct=self._slope_strata_pct(),
             height_channel=self._height_channel(),
@@ -1301,6 +1308,27 @@ class MapView(QWidget):
             return rec.get("error_pct", float("nan"))
         return rec.get(field, float("nan"))
 
+    def _colouring_for(self, plots) -> tuple[str, str, dict[int, list] | None]:
+        """The viewer colouring for ``plots`` from the 3-D colour controls.
+
+        Returns ``(coloring, cmap_name, solid)``: a per-plot field yields one solid colour per
+        plot through the chosen map (stretched over every plot on this map, so a cloud matches its
+        map-view square); "Relative height" is a per-point gradient; "Original RGB" uses the file
+        colours; "Custom single colour" paints every cloud the same picked colour.
+        """
+        field = self.colour_button_3d.value()
+        cmap_name = self.cmap_combo_3d.currentText()
+        solid: dict[int, list] | None = None
+        if field == _CUSTOM_FIELD:
+            rgb = [self._custom_3d.redF(), self._custom_3d.greenF(), self._custom_3d.blueF()]
+            solid = {p: list(rgb) for p in plots}
+        elif field not in (_RGB_FIELD, _HEIGHT_FIELD):
+            rows = self._map_rows()
+            all_vals = {p: self._scalar_value(p, rec, field) for p, rec in rows.items()}
+            solid = solid_colours(all_vals, plots, cmap_name)
+        coloring = "rgb" if field == _RGB_FIELD else "height" if field == _HEIGHT_FIELD else "error"
+        return coloring, cmap_name, solid
+
     def _push_to_viewer(self, force: bool = False) -> None:
         """Send the current selection to the shared polyscope window (live update).
 
@@ -1313,19 +1341,8 @@ class MapView(QWidget):
         """
         if not force and not self._viewer.is_alive():
             return
-        rows = self._map_rows()
         want_features = self.feature_check.isChecked()
-        field = self.colour_button_3d.value()
-        cmap_name = self.cmap_combo_3d.currentText()
-
-        solid: dict[int, list] | None = None
-        if field == _CUSTOM_FIELD:
-            rgb = [self._custom_3d.redF(), self._custom_3d.greenF(), self._custom_3d.blueF()]
-            solid = {p: list(rgb) for p in self._selected}
-        elif field not in (_RGB_FIELD, _HEIGHT_FIELD):
-            all_vals = {p: self._scalar_value(p, rec, field) for p, rec in rows.items()}
-            solid = solid_colours(all_vals, self._selected, cmap_name)
-        coloring = "rgb" if field == _RGB_FIELD else "height" if field == _HEIGHT_FIELD else "error"
+        coloring, cmap_name, solid = self._colouring_for(self._selected)
 
         clouds = []
         for plot in sorted(self._selected):

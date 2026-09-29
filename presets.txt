@@ -71,7 +71,7 @@
 # Copy the whole [default] { ... } block to make your own preset.
 # ====================================================================
 
-active = CYENS
+active = SGCBP 2019-10-02
 
 [default] {
 
@@ -208,7 +208,7 @@ active = CYENS
 
     universal_string =
 
-    augment_selected    = rotation_z, flip_h, jitter_xy, jitter_z, dropout
+    augment_selected    =
     augment_min_methods = 1
     augment_max_methods = 2
     augment_copies      = 5
@@ -221,6 +221,9 @@ active = CYENS
     reference_features_enabled  =
     reference_features_disabled =
     reference_features_split    =
+    target_column = Fresh weight (kg per hectare)
+    outer_split_mode = random_systematic
+    inner_split_mode = random_systematic
 
     feature_table_name      = features
     targets_table_name      = target
@@ -281,7 +284,7 @@ active = CYENS
 
     universal_string =
 
-    augment_selected    = rotation_z, flip_h, jitter_xy, jitter_z, dropout
+    augment_selected    =
     augment_min_methods = 1
     augment_max_methods = 2
     augment_copies      = 5
@@ -303,6 +306,9 @@ active = CYENS
     reference_features_enabled  =
     reference_features_disabled =
     reference_features_split    =
+    target_column = biomass_g_mSq
+    outer_split_mode = random_systematic
+    inner_split_mode = random_systematic
 
     feature_table_name      = features
     targets_table_name      = target
@@ -363,7 +369,7 @@ active = CYENS
 
     universal_string =
 
-    augment_selected    = rotation_z, flip_h, jitter_xy, jitter_z, dropout
+    augment_selected    =
     augment_min_methods = 1
     augment_max_methods = 2
     augment_copies      = 5
@@ -385,6 +391,9 @@ active = CYENS
     reference_features_enabled  =
     reference_features_disabled =
     reference_features_split    =
+    target_column = biomass_g_mSq
+    outer_split_mode = random_systematic
+    inner_split_mode = random_systematic
 
     feature_table_name      = features
     targets_table_name      = target

@@ -133,14 +133,14 @@ class TransformedTargetPipeline(BaseEstimator, RegressorMixin):
 
 
 def build_estimator(model_def, params: dict, *, normalize_columns, feature_columns,
-                    target_transform: str = NONE, bias_correction: str = SMEARING):
+                    target_transform: str = NONE, bias_correction: str = SMEARING, seed: int = 0):
     """Build the fitted-model object for a run: the model pipeline, wrapped if the target is logged.
 
     The single place the target transform is applied, called by both the validation folds and the
     optimiser's inner folds so tuning optimises the same units the run finally reports.
     """
     pipe = model_def.build(
-        params, normalize_columns=normalize_columns, feature_columns=feature_columns
+        params, normalize_columns=normalize_columns, feature_columns=feature_columns, seed=seed
     )
     if target_transform == LOG:
         return TransformedTargetPipeline(pipe, bias_correction=bias_correction)

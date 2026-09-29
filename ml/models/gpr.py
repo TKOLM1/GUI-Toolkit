@@ -22,7 +22,6 @@ def _factory(p: dict) -> GaussianProcessRegressor:
         kernel=kernel,
         alpha=float(p["alpha"]),
         normalize_y=True,
-        random_state=0,
     )
 
 

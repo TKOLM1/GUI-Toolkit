@@ -522,6 +522,36 @@ def test_build_never_scales_tree_model():
         assert "scale" not in pipe.named_steps
 
 
+def test_build_applies_seed_as_random_state():
+    """The run's seed reaches every estimator that has a random_state; seedless models are untouched."""
+    for model_def in MODELS:
+        model = model_def.build(seed=7).named_steps["model"]
+        if "random_state" in model.get_params():
+            assert model.random_state == 7
+    assert MODELS_BY_KEY["random_forest"].build().named_steps["model"].random_state == 0  # default
+
+
+def test_validate_fits_models_with_the_project_seed():
+    ds = make_dataset(n_plots=8, copies=2, seed=5)
+    history = _run(ds, TrainConfig(model_key="random_forest", seed=123), n_outer=2)
+    assert all(sm.model.named_steps["model"].random_state == 123 for sm in history.splits)
+    # An explicit ``seed`` override wins over config.seed for the models as well as the splits.
+    history = _run(ds, TrainConfig(model_key="random_forest", seed=123), n_outer=2, seed=9)
+    assert all(sm.model.named_steps["model"].random_state == 9 for sm in history.splits)
+
+
+def test_outer_cycle_seeds_do_not_collide_across_inner_folds():
+    """Inner fold j of cycle i uses cycle_seed[i] + j; no two (i, j) pairs may share a seed."""
+    from ml.validate import _outer_cycle_seeds
+
+    seeds = _outer_cycle_seeds(0, 10)
+    assert seeds == _outer_cycle_seeds(0, 10)          # reproducible
+    fold_seeds = [s + j for s in seeds for j in range(10)]
+    assert len(set(fold_seeds)) == len(fold_seeds)
+    assert all(0 <= s + 10 < 2**32 for s in seeds)      # valid for GroupShuffleSplit / TPESampler
+    assert _outer_cycle_seeds(1, 10) != seeds
+
+
 def test_partial_normalisation_trains_without_leakage():
     ds = make_dataset(n_plots=8, copies=2, n_features=4, seed=2)
     cfg = TrainConfig(

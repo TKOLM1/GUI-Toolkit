@@ -76,6 +76,7 @@ class ModelDef:
         *,
         normalize_columns: list[str] | None = None,
         feature_columns: list[str] | None = None,
+        seed: int = 0,
     ) -> Pipeline:
         """Build the full estimator pipeline for the given hyperparameters.
 
@@ -88,6 +89,9 @@ class ModelDef:
         * ``normalize_columns is None`` -> standardise every column (the original behaviour).
         * a subset -> a ``ColumnTransformer`` standardises those columns, others pass through.
         * an empty list -> no scaling at all ("normalize none").
+
+        ``seed`` becomes the estimator's ``random_state`` whenever it has one (forest bootstraps,
+        boosting subsamples, …), so the project-wide seed reaches the model's own randomness too.
         """
         merged = self.defaults()
         if params:
@@ -112,5 +116,8 @@ class ModelDef:
                 # No column order given: fall back to standardising everything.
                 steps.append(("scale", StandardScaler()))
             # normalize_columns == [] -> no scale step ("normalize none").
-        steps.append(("model", self.factory(merged)))
+        model = self.factory(merged)
+        if "random_state" in model.get_params():
+            model.set_params(random_state=seed)
+        steps.append(("model", model))
         return Pipeline(steps)

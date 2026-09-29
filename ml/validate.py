@@ -130,6 +130,18 @@ def _sub_dataset(dataset: Dataset, train_plots: set) -> Dataset:
     )
 
 
+def _outer_cycle_seeds(base_seed: int, n_outer: int) -> list[int]:
+    """One independent seed per outer cycle for its inner optimizer search.
+
+    The inner search derives its random-mode fold seeds as ``seed + fold``, so plain ``base_seed + i``
+    per cycle made cycle ``i`` fold ``j`` collide with cycle ``i+1`` fold ``j-1``. Spawning children of
+    one :class:`numpy.random.SeedSequence` keeps them reproducible but statistically independent.
+    Kept to 31 bits so the inner ``+ fold`` offset stays inside numpy's legacy 32-bit seed range.
+    """
+    children = np.random.SeedSequence(base_seed).spawn(n_outer)
+    return [int(c.generate_state(1)[0]) >> 1 for c in children]
+
+
 def _fit_score_fold(dataset: Dataset, config: TrainConfig, fold_features: list[str],
                     tr_full, te_full, split_index: int) -> SplitModel:
     """Fit one model on the outer-train rows and score the outer-test rows — a single fixed split.
@@ -160,7 +172,7 @@ def _fit_score_fold(dataset: Dataset, config: TrainConfig, fold_features: list[s
     pipe = build_estimator(
         model_def, config.params, normalize_columns=config.normalize_columns,
         feature_columns=cols, target_transform=config.target_transform,
-        bias_correction=config.target_bias_correction,
+        bias_correction=config.target_bias_correction, seed=config.seed,
     )
     pipe.fit(X.iloc[tr_fit], y.iloc[tr_fit])
 
@@ -229,6 +241,7 @@ def validate_procedure(
     opt_trials: int = 50,
     opt_fit_on_augmented: bool = True,
     opt_validate_on_augmented: bool = False,
+    opt_n_jobs: int = 1,
     seed: int | None = None,
     note: Callable[[str], None] | None = None,
     progress: ProgressCallback | None = None,
@@ -251,7 +264,8 @@ def validate_procedure(
     the whole procedure is deterministic end to end; ``"random_systematic"`` for a shuffled
     without-replacement partition; or ``"random"`` for independent noise-averaging draws) at
     ``inner_test_size`` (falling back to the outer ``config.test_size`` when ``None``), over
-    ``opt_n_cv_splits`` folds.
+    ``opt_n_cv_splits`` folds. ``opt_n_jobs`` (> 1) scores each trial's inner folds in parallel threads
+    (see :func:`ml.optimize.optimize_hyperparameters`); it changes speed only, never the result.
 
     With ``do_optimize=False`` the current ``config.params`` are used as-is in every fold ⇒ an honest CV
     of the fixed pipeline. The features are always the ones in ``config.feature_columns``.
@@ -281,6 +295,8 @@ def validate_procedure(
             note(describe(config.target_transform, config.target_bias_correction))
 
     base_seed = config.seed if seed is None else seed
+    # The run's seed is also every model's random_state, so an explicit ``seed`` override must win there too.
+    config = replace(config, seed=base_seed)
     n_groups = len(np.unique(groups))
     if n_groups < 2:
         raise ValueError(f"Need at least 2 distinct plot groups to validate; found {n_groups}.")
@@ -294,6 +310,7 @@ def validate_procedure(
     # single outer fold is allowed: it's one honest held-out block (the procedure never sees it), just
     # not a multi-fold rotation — the only hard constraint is splits·ratio ≤ 1.
     n_outer = max(1, min(n_outer, max_splits_for_test_size(n_groups, config.test_size)))
+    inner_seeds = _outer_cycle_seeds(base_seed, n_outer)
 
     index = X.index.to_numpy()
     splits: list[SplitModel] = []
@@ -354,10 +371,10 @@ def validate_procedure(
             )
             best_params = optimize_hyperparameters(
                 sub, opt_config, opt_trials, n_cv_splits=opt_n_cv_splits,
-                seed=base_seed + i, split_mode=inner_split_mode,
+                seed=inner_seeds[i], split_mode=inner_split_mode,
                 fit_on_augmented=opt_fit_on_augmented,
                 validate_on_augmented=opt_validate_on_augmented,
-                progress=opt_progress, control=control,
+                n_jobs=opt_n_jobs, progress=opt_progress, control=control,
             )
             fold_config = replace(fold_config, params=best_params)
         else:

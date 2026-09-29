@@ -127,6 +127,14 @@ class Preset:
     reference_features_enabled: list[str] = field(default_factory=list)   # reference cols to use
     reference_features_disabled: list[str] = field(default_factory=list)  # reference cols to skip (only if enabled blank)
     reference_features_split: list[str] = field(default_factory=list)     # reference cols to one-hot
+    # Reference column pre-selected as the ground truth (target) on the Feature tab; blank = none.
+    target_column: str = ""
+
+    # -- ML splitting ------------------------------------------------------ #
+    # Pre-selected split modes on the ML tab, as engine keys (sequential / systematic /
+    # random_systematic, plus random for the inner loop). Blank = the tab's own default.
+    outer_split_mode: str = ""
+    inner_split_mode: str = ""
 
     # -- output file names (no extension; .csv is added) ------------------- #
     feature_table_name: str = "features"
@@ -419,6 +427,15 @@ active = default
     reference_features_enabled  =
     reference_features_disabled =
     reference_features_split    =
+    # Reference column to pre-select as the ground truth (target):
+    target_column =
+
+    # -- ML splitting -----------------------------------------------
+    # Pre-selected split modes: sequential, systematic or
+    # random_systematic (the inner loop also takes random).
+    # Blank = the ML tab's own default (sequential).
+    outer_split_mode =
+    inner_split_mode =
 
     # -- Output file names (no extension; written as .csv) ----------
     feature_table_name      = features

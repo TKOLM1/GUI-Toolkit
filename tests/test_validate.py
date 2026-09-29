@@ -252,6 +252,43 @@ def test_inner_random_systematic_runs_and_reports_inner_progress():
     assert all(stage == "optimize" and 1 <= f <= 3 and n == 3 for f, n, stage, _t, _tot in inner_calls)
 
 
+def test_opt_n_jobs_reaches_the_inner_optimizer(monkeypatch):
+    """The thread count must actually be handed to every fold's optimizer search, not dropped."""
+    pytest.importorskip("optuna")
+    import ml.validate as validate_module
+
+    seen: list[int] = []
+    real = validate_module.optimize_hyperparameters
+
+    def spy(*args, **kwargs):
+        seen.append(kwargs.get("n_jobs", 1))
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(validate_module, "optimize_hyperparameters", spy)
+    ds = make_dataset(n_plots=16, copies=2, n_features=4, seed=5)
+    vr = validate_procedure(ds, _cfg(ds), do_optimize=True, n_outer_splits=3, opt_trials=2,
+                            opt_n_jobs=4)
+    assert seen == [4] * vr.n_outer
+
+
+def test_threaded_inner_folds_match_serial():
+    """Scoring the inner folds in parallel threads changes speed only: same tuned params, same scores.
+
+    End to end through the nested CV; the forest's thread pinning under the fan-out is covered at the
+    optimizer level in test_ml.
+    """
+    pytest.importorskip("optuna")
+    ds = make_dataset(n_plots=16, copies=2, n_features=4, seed=5)
+    cfg = _cfg(ds)
+    kwargs = dict(do_optimize=True, n_outer_splits=3, outer_split_mode="random_systematic",
+                  inner_split_mode="random_systematic", opt_trials=4)
+    serial = validate_procedure(ds, cfg, opt_n_jobs=1, **kwargs)
+    threaded = validate_procedure(ds, cfg, opt_n_jobs=4, **kwargs)
+    assert threaded.fold_params == serial.fold_params
+    for s, t in zip(serial.history.splits, threaded.history.splits):
+        assert t.metrics == pytest.approx(s.metrics, nan_ok=True)
+
+
 # --------------------------------------------------------------------------- #
 # Guards                                                                       #
 # --------------------------------------------------------------------------- #

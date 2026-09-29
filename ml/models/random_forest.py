@@ -18,7 +18,6 @@ def _factory(p: dict) -> RandomForestRegressor:
         max_depth=None if max_depth <= 0 else max_depth,
         min_samples_leaf=int(p["min_samples_leaf"]),
         n_jobs=inner_fit_n_jobs(-1),
-        random_state=0,
     )
 
 

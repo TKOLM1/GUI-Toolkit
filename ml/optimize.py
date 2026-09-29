@@ -223,7 +223,7 @@ def optimize_hyperparameters(
         pipe = build_estimator(
             model_def, params, normalize_columns=config.normalize_columns, feature_columns=cols,
             target_transform=config.target_transform,
-            bias_correction=config.target_bias_correction,
+            bias_correction=config.target_bias_correction, seed=config.seed,
         )
         pipe.fit(X.iloc[tr_fit], y.iloc[tr_fit])
         y_va = y.iloc[va_eval]

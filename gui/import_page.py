@@ -1236,8 +1236,10 @@ class ImportPage(QWidget):
         if reference:
             # Drop the current column choices first: _on_reference_changed keeps a selection that
             # is still among the headers, which would otherwise hold the previous preset's key
-            # column in place even though the new preset names its own.
-            for combo in (self.reference_key, self.reference_row, self.reference_filter_col):
+            # column in place even though the new preset names its own. The filter *value* too:
+            # two presets on one sheet (e.g. stage Z31 vs Z65) otherwise keep the old stage.
+            for combo in (self.reference_key, self.reference_row,
+                          self.reference_filter_col, self.reference_filter_value):
                 combo.blockSignals(True)
                 combo.clear()
                 combo.blockSignals(False)

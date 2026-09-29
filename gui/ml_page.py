@@ -45,6 +45,7 @@ from PySide6.QtWidgets import (
 
 from PySide6.QtCore import Signal
 
+from common.config import CONFIG
 from common.naming import plot_number_from_name
 from common.session import Session
 from ml import (
@@ -218,6 +219,20 @@ class MLPage(QWidget):
         # The hyperparameter form now lives on the run panel, built after the model panel, so
         # populate it (and the search-space readout) once everything exists.
         self._on_model_changed()
+        self.apply_preset_defaults()
+
+    def apply_preset_defaults(self) -> None:
+        """Select the active preset's outer/inner split modes.
+
+        Called once the page is built and again by the shell whenever the preset changes. A blank or
+        unknown key falls back to the first entry (Sequential, the tab's default) rather than keeping
+        whatever the previous preset chose.
+        """
+        for combo, key in ((self.outer_split_mode, CONFIG.outer_split_mode),
+                           (self.inner_split_mode, CONFIG.inner_split_mode)):
+            keys = [_split_mode_key(combo.itemText(i)) for i in range(combo.count())]
+            wanted = _split_mode_key(key)
+            combo.setCurrentIndex(keys.index(wanted) if wanted in keys else 0)
 
     # ------------------------------------------------------------------ #
     # Panels                                                             #
@@ -1290,6 +1305,7 @@ class MLPage(QWidget):
             opt_trials=self.n_trials.value(),
             opt_fit_on_augmented=self.use_aug_fit.isChecked(),
             opt_validate_on_augmented=self.use_aug_val.isChecked(),
+            opt_n_jobs=self.opt_threads.value(),
             seed=config.seed,
         )
         model_keys = [m.key for m in MODELS] if sweeping else None

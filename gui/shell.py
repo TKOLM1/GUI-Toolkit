@@ -214,22 +214,34 @@ class MainShell(QMainWindow):
             if button is not None:
                 button.setEnabled(enabled)
 
+    def _reset_pages(self) -> None:
+        """Wipe every pipeline page back to its default controls and drop all its cached state.
+
+        Resetting all pages before any re-entry avoids ordering coupling between them.
+        """
+        for page in self._pages[1:]:
+            restore_controls(self._page_defaults.get(id(page), []))
+            page.reset_for_project()
+
     def _on_project_changed(self) -> None:
         """A project was created/opened: enable the pipeline tabs and re-seed every page from it."""
         self._set_pipeline_enabled(True)
         # Two passes: first wipe every page's cached/visible state from the previous project, then
-        # let each re-read the now-active project. Resetting all pages before any re-entry avoids
-        # ordering coupling between them (the session hand-off is already cleared in _activate).
-        for page in self._pages[1:]:
-            restore_controls(self._page_defaults.get(id(page), []))
-            page.reset_for_project()
+        # let each re-read the now-active project (the session hand-off is already cleared in _activate).
+        self._reset_pages()
         for page in self._pages[1:]:
             page.on_enter()
         self.update_status_readout()
 
     def _on_preset_changed(self) -> None:
-        """The active preset changed: re-apply its defaults across the pipeline pages."""
-        # Pages whose controls are preset-driven re-seed them first; the snapshot is then retaken so
+        """The active preset changed: wipe every page, then re-apply the new preset's defaults."""
+        # A preset change is a clean slate, exactly like a new project: anything a page cached under
+        # the old preset (a reference sheet filtered to the old stage, a loaded dataset, a finished
+        # run) would otherwise leak into work done under the new one. Files on disk are untouched.
+        # With no project open the pipeline tabs are disabled and hold nothing to wipe.
+        if self.session.project is not None:
+            self._reset_pages()
+        # Pages whose controls are preset-driven re-seed them next; the snapshot is then retaken so
         # opening a project later restores *this* preset's defaults, not the start-up preset's.
         for page in self._pages[1:]:
             apply_defaults = getattr(page, "apply_preset_defaults", None)

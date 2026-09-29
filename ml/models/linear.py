@@ -48,7 +48,7 @@ RIDGE = ModelDef(
     tooltip="Linear regression with an L2 penalty; keeps all features, shrinks coefficients.",
     hparams=(_ALPHA,),
     needs_scaling=True,
-    factory=lambda p: Ridge(alpha=float(p["alpha"]), random_state=0),
+    factory=lambda p: Ridge(alpha=float(p["alpha"])),
 )
 
 LASSO = ModelDef(
@@ -58,7 +58,7 @@ LASSO = ModelDef(
     hparams=(_ALPHA, _MAX_ITER, _TOL),
     needs_scaling=True,
     factory=lambda p: Lasso(
-        alpha=float(p["alpha"]), max_iter=int(p["max_iter"]), tol=float(p["tol"]), random_state=0
+        alpha=float(p["alpha"]), max_iter=int(p["max_iter"]), tol=float(p["tol"])
     ),
     iteration_hparams=("max_iter", "tol"),
 )
@@ -77,7 +77,7 @@ ELASTIC_NET = ModelDef(
     needs_scaling=True,
     factory=lambda p: ElasticNet(
         alpha=float(p["alpha"]), l1_ratio=float(p["l1_ratio"]),
-        max_iter=int(p["max_iter"]), tol=float(p["tol"]), random_state=0
+        max_iter=int(p["max_iter"]), tol=float(p["tol"])
     ),
     iteration_hparams=("max_iter", "tol"),
 )

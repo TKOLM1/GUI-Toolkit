@@ -89,14 +89,13 @@ class FeaturePage(QWidget):
         self._session = session
         self._worker: BatchWorker | None = None
         self._feature_checks: dict[str, QCheckBox] = {}
+        # The loaded reference sheet the column checkboxes were last built from, so on_enter can tell
+        # a reload on Import (rebuild, losing the ticks) from the same sheet (leave the ticks alone).
         self._external: ExternalData | None = None
         self._external_checks: dict[str, QCheckBox] = {}
         self._external_encode_checks: dict[str, QCheckBox] = {}  # "split into binary" per column
         self._output_path: Path | None = None
         self._offered_root: Path | None = None  # project we've already offered existing features for
-        # The reference sheet the column checkboxes were last built from, so on_enter can tell a
-        # newly-loaded sheet (rebuild, losing the ticks) from the same one (leave the ticks alone).
-        self._external_source: Path | None = None
 
         root = QHBoxLayout(self)
         root.addWidget(self._build_feature_panel(), 4)
@@ -185,6 +184,8 @@ class FeaturePage(QWidget):
         on = set(CONFIG.enabled_features([f.key for f in FEATURES]))
         for key, check in self._feature_checks.items():
             check.setChecked(key in on)
+        if hasattr(self, "target_combo"):  # first call runs before the reference panel is built
+            self._apply_preset_target()
 
     def _build_external_panel(self) -> QWidget:
         box = QGroupBox("Imported reference features")
@@ -357,16 +358,16 @@ class FeaturePage(QWidget):
         """Adopt whatever reference sheet the Import tab has loaded into the session.
 
         Called from :meth:`on_enter`, so switching to this tab always reflects the sheet (and key
-        column) chosen on Import. The column checkboxes are rebuilt only when the *source file*
-        changes: re-entering the tab with the same sheet must not silently reset the user's ticks
-        or their chosen target.
+        column) chosen on Import. The column checkboxes are rebuilt only when the Import tab has
+        *reloaded* the sheet: re-entering the tab with the same loaded sheet must not silently reset
+        the user's ticks or their chosen target. Identity, not the file path, decides — a reload of
+        the same file with a different key or row filter (e.g. stage Z31 -> Z65) holds different
+        rows, and keeping the old copy would write the wrong targets.
         """
         external: ExternalData | None = self._session.external
-        source = external.source_path if external is not None else None
-        if source == self._external_source and self._external is not None:
+        if external is not None and external is self._external:
             return
         self._external = external
-        self._external_source = source
         if external is None:
             self._rebuild_external_checks([])
             self.external_status.setText("No reference sheet — load one on the Import tab.")
@@ -374,7 +375,7 @@ class FeaturePage(QWidget):
         self._rebuild_external_checks(external.columns)
         self.external_status.setText(
             f"{len(external.frame)} plot(s) and {len(external.columns)} column(s) "
-            f"from {source.name}."
+            f"from {external.source_path.name}."
         )
 
     def _rebuild_external_checks(self, columns: list[str]) -> None:
@@ -413,7 +414,16 @@ class FeaturePage(QWidget):
         self.target_combo.addItems(columns)
         self.target_combo.setCurrentText(_NONE_TARGET)
         self.target_combo.blockSignals(False)
-        self._on_target_changed(_NONE_TARGET)
+        self._apply_preset_target()
+
+    def _apply_preset_target(self) -> None:
+        """Select the active preset's target column when the loaded sheet has it (else none)."""
+        preferred = CONFIG.target_column.strip()
+        target = preferred if preferred and self.target_combo.findText(preferred) >= 0 else _NONE_TARGET
+        self.target_combo.blockSignals(True)
+        self.target_combo.setCurrentText(target)
+        self.target_combo.blockSignals(False)
+        self._on_target_changed(target)
 
     def _on_target_changed(self, target: str) -> None:
         """Gray out the chosen target in the reference list so it can't double as a feature."""
@@ -661,7 +671,6 @@ class FeaturePage(QWidget):
         ``_sync_external`` rebuilds them from whatever the new project loads.
         """
         self._external = None
-        self._external_source = None
         self._rebuild_external_checks([])
         self.external_status.setText("No reference sheet — load one on the Import tab.")
         # The target dropdown and the channel dropdowns keep the user's previous pick whenever the

@@ -14,7 +14,6 @@ def _factory(p: dict) -> HistGradientBoostingRegressor:
         learning_rate=float(p["learning_rate"]),
         max_depth=None if max_depth <= 0 else max_depth,
         l2_regularization=float(p["l2_regularization"]),
-        random_state=0,
     )
 
 
